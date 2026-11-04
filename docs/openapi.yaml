@@ -1,0 +1,2347 @@
+openapi: 3.0.3
+info:
+  title: SIGR API REST
+  version: 0.8.0
+  description: 'API REST del Sistema Integral de Gestión de Restaurante (SIGR): autenticación
+    con roles, menú, pedidos, reservas, facturación, cierre de caja y reportes de
+    ventas.'
+  license:
+    name: MIT
+paths:
+  /api/v1/auth/login/:
+    post:
+      operationId: v1_auth_login_create
+      description: Inicia sesión con correo y contraseña y devuelve el token.
+      summary: Iniciar sesión
+      tags:
+      - Autenticación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: v1_auth_logout_create
+      description: 'Cierra la sesión: el token deja de ser válido.'
+      summary: Cerrar sesión
+      tags:
+      - Autenticación
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/registro/:
+    post:
+      operationId: v1_auth_registro_create
+      description: Crea una cuenta de cliente y devuelve su token.
+      summary: Registrar un cliente
+      tags:
+      - Autenticación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+          description: ''
+  /api/v1/auth/yo/:
+    get:
+      operationId: v1_auth_yo_retrieve
+      description: Datos de la cuenta autenticada; se pueden editar el nombre, el
+        apellido y el teléfono.
+      summary: Ver mi cuenta
+      tags:
+      - Autenticación
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+          description: ''
+    patch:
+      operationId: v1_auth_yo_partial_update
+      description: Datos de la cuenta autenticada; se pueden editar el nombre, el
+        apellido y el teléfono.
+      summary: Editar mi cuenta
+      tags:
+      - Autenticación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPerfilRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPerfilRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPerfilRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+          description: ''
+  /api/v1/caja/cierres/:
+    get:
+      operationId: v1_caja_cierres_list
+      summary: Listar cierres de caja (administrador)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      tags:
+      - Caja
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCierreCajaList'
+          description: ''
+    post:
+      operationId: v1_caja_cierres_create
+      description: Compara el efectivo contado con las ventas facturadas del día y
+        guarda la diferencia. Un cierre no se puede modificar, eliminar ni repetir
+        (409). No se permite con pedidos del día sin cerrar.
+      summary: Cerrar la caja de un día (administrador)
+      tags:
+      - Caja
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CierreCajaCrearRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CierreCajaCrearRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CierreCajaCrearRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierreCaja'
+          description: ''
+  /api/v1/caja/cierres/{id}/:
+    get:
+      operationId: v1_caja_cierres_retrieve
+      summary: Ver un cierre de caja (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este cierre de caja.
+        required: true
+      tags:
+      - Caja
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierreCaja'
+          description: ''
+  /api/v1/caja/facturas/:
+    get:
+      operationId: v1_caja_facturas_list
+      summary: Listar facturas (administrador)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      tags:
+      - Caja
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFacturaList'
+          description: ''
+  /api/v1/caja/facturas/{id}/:
+    get:
+      operationId: v1_caja_facturas_retrieve
+      summary: Ver una factura con el detalle del pedido (una factura ajena responde
+        404 al cliente)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este factura.
+        required: true
+      tags:
+      - Caja
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacturaDetalle'
+          description: ''
+  /api/v1/caja/reportes/ventas/:
+    get:
+      operationId: v1_caja_reportes_ventas_retrieve
+      summary: Reporte de ventas por rango de fechas (administrador)
+      parameters:
+      - in: query
+        name: desde
+        schema:
+          type: string
+        description: AAAA-MM-DD; por defecto, hace 6 días.
+      - in: query
+        name: hasta
+        schema:
+          type: string
+        description: AAAA-MM-DD; por defecto, hoy. No puede ser futura ni superar
+          un año de rango.
+      tags:
+      - Caja
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteVentas'
+          description: ''
+  /api/v1/caja/resumen/:
+    get:
+      operationId: v1_caja_resumen_retrieve
+      description: El mesero solo ve el total de ventas del día; el administrador
+        ve además facturas, pedidos sin cerrar y el cierre.
+      summary: Resumen de caja del día
+      tags:
+      - Caja
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenCaja'
+          description: ''
+  /api/v1/categorias/:
+    get:
+      operationId: v1_categorias_list
+      summary: Listar categorías (el público ve solo las activas)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      tags:
+      - 'Menú: categorías'
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoriaList'
+          description: ''
+    post:
+      operationId: v1_categorias_create
+      summary: Crear una categoría (administrador)
+      tags:
+      - 'Menú: categorías'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+  /api/v1/categorias/{id}/:
+    get:
+      operationId: v1_categorias_retrieve
+      summary: Ver una categoría
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - 'Menú: categorías'
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    put:
+      operationId: v1_categorias_update
+      summary: Reemplazar una categoría (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - 'Menú: categorías'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    patch:
+      operationId: v1_categorias_partial_update
+      summary: Editar una categoría (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - 'Menú: categorías'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    delete:
+      operationId: v1_categorias_destroy
+      summary: Eliminar una categoría (administrador); 409 si tiene platos
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - 'Menú: categorías'
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/pedidos/:
+    get:
+      operationId: v1_pedidos_list
+      description: El cliente crea y sigue sus pedidos; el personal registra pedidos
+        de mesa y los avanza de estado.
+      summary: Listar pedidos (el cliente ve solo los suyos; el personal, todos)
+      parameters:
+      - in: query
+        name: estado
+        schema:
+          type: string
+          enum:
+          - activos
+          - cancelado
+          - cerrado
+          - en_preparacion
+          - listo
+          - pendiente
+          - servido
+        description: Filtra por estado.
+      - in: query
+        name: mesa
+        schema:
+          type: integer
+        description: Número de mesa (1 a 99).
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      tags:
+      - Pedidos
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPedidoList'
+          description: ''
+    post:
+      operationId: v1_pedidos_create
+      description: El cliente crea y sigue sus pedidos; el personal registra pedidos
+        de mesa y los avanza de estado.
+      summary: Crear un pedido
+      tags:
+      - Pedidos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoCrearRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PedidoCrearRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PedidoCrearRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+          description: ''
+  /api/v1/pedidos/{id}/:
+    get:
+      operationId: v1_pedidos_retrieve
+      description: El cliente crea y sigue sus pedidos; el personal registra pedidos
+        de mesa y los avanza de estado.
+      summary: Ver un pedido (un pedido ajeno responde 404)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este pedido.
+        required: true
+      tags:
+      - Pedidos
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+          description: ''
+  /api/v1/pedidos/{id}/avanzar/:
+    post:
+      operationId: v1_pedidos_avanzar_create
+      description: Si se envía `desde` y el pedido ya no está en ese estado, responde
+        409.
+      summary: Avanzar el pedido al siguiente estado (personal)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este pedido.
+        required: true
+      tags:
+      - Pedidos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+          description: ''
+  /api/v1/pedidos/{id}/cancelar/:
+    post:
+      operationId: v1_pedidos_cancelar_create
+      description: El cliente crea y sigue sus pedidos; el personal registra pedidos
+        de mesa y los avanza de estado.
+      summary: Cancelar un pedido pendiente
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este pedido.
+        required: true
+      tags:
+      - Pedidos
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+          description: ''
+  /api/v1/platos/:
+    get:
+      operationId: v1_platos_list
+      description: El público y los clientes ven solo platos disponibles de categorías
+        activas; el personal ve todos.
+      summary: Listar platos (carta)
+      parameters:
+      - in: query
+        name: categoria
+        schema:
+          type: integer
+        description: Id de la categoría.
+      - in: query
+        name: disponible
+        schema:
+          type: string
+          enum:
+          - 'false'
+          - 'true'
+        description: Solo el personal.
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Texto a buscar en nombre o descripción (máx. 100).
+      tags:
+      - 'Menú: platos'
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlatoList'
+          description: ''
+    post:
+      operationId: v1_platos_create
+      summary: Crear un plato, con foto opcional (administrador)
+      tags:
+      - 'Menú: platos'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlatoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlatoRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plato'
+          description: ''
+  /api/v1/platos/{id}/:
+    get:
+      operationId: v1_platos_retrieve
+      summary: Ver un plato
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este plato.
+        required: true
+      tags:
+      - 'Menú: platos'
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plato'
+          description: ''
+    put:
+      operationId: v1_platos_update
+      summary: Reemplazar un plato (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este plato.
+        required: true
+      tags:
+      - 'Menú: platos'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlatoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlatoRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plato'
+          description: ''
+    patch:
+      operationId: v1_platos_partial_update
+      summary: Editar un plato (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este plato.
+        required: true
+      tags:
+      - 'Menú: platos'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatoRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plato'
+          description: ''
+    delete:
+      operationId: v1_platos_destroy
+      summary: Eliminar un plato (administrador); 409 si tiene pedidos
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este plato.
+        required: true
+      tags:
+      - 'Menú: platos'
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/platos/{id}/disponibilidad/:
+    post:
+      operationId: v1_platos_disponibilidad_create
+      summary: Alternar la disponibilidad de un plato (personal)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este plato.
+        required: true
+      tags:
+      - 'Menú: platos'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plato'
+          description: ''
+  /api/v1/platos/destacados/:
+    get:
+      operationId: v1_platos_destacados_list
+      summary: Platos destacados del inicio (máximo 6)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      tags:
+      - 'Menú: platos'
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlatoList'
+          description: ''
+  /api/v1/reservas/:
+    get:
+      operationId: v1_reservas_list
+      summary: Listar reservas (el cliente ve solo las suyas; el personal, todas)
+      parameters:
+      - in: query
+        name: estado
+        schema:
+          type: string
+          enum:
+          - cancelada
+          - completada
+          - confirmada
+          - pendiente
+          - vigentes
+        description: Filtra por estado.
+      - in: query
+        name: fecha
+        schema:
+          type: string
+        description: Fecha en formato AAAA-MM-DD.
+      - in: query
+        name: mesa
+        schema:
+          type: integer
+        description: Número de mesa (1 a 99).
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      tags:
+      - Reservas
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReservaList'
+          description: ''
+    post:
+      operationId: v1_reservas_create
+      description: Franjas de media hora entre 11:00 y 20:00, duración de 2 horas,
+        anticipación de 1 hora a 30 días y hasta 12 personas. Un cruce de horario
+        responde 409.
+      summary: Reservar una mesa (solo clientes)
+      tags:
+      - Reservas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaCrearRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReservaCrearRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReservaCrearRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+          description: ''
+  /api/v1/reservas/{id}/:
+    get:
+      operationId: v1_reservas_retrieve
+      summary: Ver una reserva (una reserva ajena responde 404)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este reserva.
+        required: true
+      tags:
+      - Reservas
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+          description: ''
+  /api/v1/reservas/{id}/cancelar/:
+    post:
+      operationId: v1_reservas_cancelar_create
+      summary: Cancelar una reserva vigente
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este reserva.
+        required: true
+      tags:
+      - Reservas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+          description: ''
+  /api/v1/reservas/{id}/completar/:
+    post:
+      operationId: v1_reservas_completar_create
+      summary: Marcar como completada una reserva confirmada (personal)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este reserva.
+        required: true
+      tags:
+      - Reservas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+          description: ''
+  /api/v1/reservas/{id}/confirmar/:
+    post:
+      operationId: v1_reservas_confirmar_create
+      summary: Confirmar una reserva pendiente (personal)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este reserva.
+        required: true
+      tags:
+      - Reservas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambioEstadoReservaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+          description: ''
+  /api/v1/salud/:
+    get:
+      operationId: v1_salud_retrieve
+      description: Comprobación de que el servicio está arriba. No requiere credenciales.
+      summary: Estado del servicio
+      tags:
+      - Salud
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+          description: ''
+  /api/v1/usuarios/:
+    get:
+      operationId: v1_usuarios_list
+      description: 'Administración de usuarios (solo administrador): listar con búsqueda,
+        ver y dar de alta personal.'
+      summary: Listar usuarios
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Texto a buscar en nombre, apellido o correo (máx. 100).
+      - in: query
+        name: rol
+        schema:
+          type: string
+          enum:
+          - administrador
+          - cliente
+          - mesero
+        description: Filtra por rol.
+      tags:
+      - Usuarios
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsuarioList'
+          description: ''
+    post:
+      operationId: v1_usuarios_create
+      description: 'Administración de usuarios (solo administrador): listar con búsqueda,
+        ver y dar de alta personal.'
+      summary: Dar de alta personal (mesero o administrador)
+      tags:
+      - Usuarios
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PersonalRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PersonalRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+          description: ''
+  /api/v1/usuarios/{id}/:
+    get:
+      operationId: v1_usuarios_retrieve
+      description: 'Administración de usuarios (solo administrador): listar con búsqueda,
+        ver y dar de alta personal.'
+      summary: Ver un usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - Usuarios
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+          description: ''
+components:
+  schemas:
+    CambioEstadoRequest:
+      type: object
+      description: 'Estado que la persona veía al actuar (opcional): si ya cambió,
+        la API responde 409 en vez de saltarse pasos.'
+      properties:
+        desde:
+          $ref: '#/components/schemas/EstadoPedidoEnum'
+    CambioEstadoReservaRequest:
+      type: object
+      description: 'Estado que la persona veía al actuar (opcional): si ya cambió,
+        la API responde 409.'
+      properties:
+        desde:
+          $ref: '#/components/schemas/EstadoReservaEnum'
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          pattern: ^\w[\w ,.'&()/\-]*$
+          maxLength: 60
+        descripcion:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 999
+          minimum: 0
+          default: 0
+        activa:
+          type: boolean
+          default: true
+      required:
+      - id
+      - nombre
+    CategoriaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          pattern: ^\w[\w ,.'&()/\-]*$
+          maxLength: 60
+        descripcion:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 999
+          minimum: 0
+          default: 0
+        activa:
+          type: boolean
+          default: true
+      required:
+      - nombre
+    CierreCaja:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fecha:
+          type: string
+          format: date
+          readOnly: true
+        total_ventas:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+          title: Total de ventas
+        numero_facturas:
+          type: integer
+          readOnly: true
+          title: Facturas emitidas
+        efectivo_contado:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        diferencia:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        resultado:
+          type: string
+          readOnly: true
+        observaciones:
+          type: string
+          readOnly: true
+        cerrado_por:
+          type: integer
+          readOnly: true
+        cerrado_por_nombre:
+          type: string
+          readOnly: true
+        cerrado:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Cerrado el
+      required:
+      - cerrado
+      - cerrado_por
+      - cerrado_por_nombre
+      - diferencia
+      - efectivo_contado
+      - fecha
+      - id
+      - numero_facturas
+      - observaciones
+      - resultado
+      - total_ventas
+    CierreCajaCrearRequest:
+      type: object
+      description: Entrada del cierre de caja. El total de ventas, la diferencia y
+        quién cierra se calculan en el servidor.
+      properties:
+        fecha:
+          type: string
+          format: date
+        efectivo_contado:
+          type: string
+          pattern: ^\d{1,7}([.,]\d{1,2})?$
+          example: '28000.50'
+        observaciones:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 200
+          - type: string
+            maxLength: 0
+      required:
+      - efectivo_contado
+      - fecha
+    EstadoPedidoEnum:
+      enum:
+      - pendiente
+      - en_preparacion
+      - listo
+      - servido
+      - cerrado
+      - cancelado
+      type: string
+      description: |-
+        * `pendiente` - Pendiente
+        * `en_preparacion` - En preparación
+        * `listo` - Listo
+        * `servido` - Servido
+        * `cerrado` - Cerrado
+        * `cancelado` - Cancelado
+    EstadoReservaEnum:
+      enum:
+      - pendiente
+      - confirmada
+      - completada
+      - cancelada
+      type: string
+      description: |-
+        * `pendiente` - Pendiente
+        * `confirmada` - Confirmada
+        * `completada` - Completada
+        * `cancelada` - Cancelada
+    Factura:
+      type: object
+      description: Factura para listados (solo lectura).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        numero:
+          type: string
+          readOnly: true
+        pedido:
+          type: integer
+          readOnly: true
+        mesa:
+          type: integer
+          readOnly: true
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        emitida:
+          type: string
+          format: date-time
+          readOnly: true
+        emitida_por:
+          type: integer
+          readOnly: true
+        emitida_por_nombre:
+          type: string
+          readOnly: true
+      required:
+      - emitida
+      - emitida_por
+      - emitida_por_nombre
+      - id
+      - mesa
+      - numero
+      - pedido
+      - total
+    FacturaDetalle:
+      type: object
+      description: Factura con el detalle completo del pedido (el documento que se
+        imprime).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        numero:
+          type: string
+          readOnly: true
+        pedido:
+          type: integer
+          readOnly: true
+        mesa:
+          type: integer
+          readOnly: true
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        emitida:
+          type: string
+          format: date-time
+          readOnly: true
+        emitida_por:
+          type: integer
+          readOnly: true
+        emitida_por_nombre:
+          type: string
+          readOnly: true
+        pedido_detalle:
+          allOf:
+          - $ref: '#/components/schemas/Pedido'
+          readOnly: true
+      required:
+      - emitida
+      - emitida_por
+      - emitida_por_nombre
+      - id
+      - mesa
+      - numero
+      - pedido
+      - pedido_detalle
+      - total
+    HoraEnum:
+      enum:
+      - '11:00'
+      - '11:30'
+      - '12:00'
+      - '12:30'
+      - '13:00'
+      - '13:30'
+      - '14:00'
+      - '14:30'
+      - '15:00'
+      - '15:30'
+      - '16:00'
+      - '16:30'
+      - '17:00'
+      - '17:30'
+      - '18:00'
+      - '18:30'
+      - '19:00'
+      - '19:30'
+      - '20:00'
+      type: string
+      description: |-
+        * `11:00` - 11:00
+        * `11:30` - 11:30
+        * `12:00` - 12:00
+        * `12:30` - 12:30
+        * `13:00` - 13:00
+        * `13:30` - 13:30
+        * `14:00` - 14:00
+        * `14:30` - 14:30
+        * `15:00` - 15:00
+        * `15:30` - 15:30
+        * `16:00` - 16:00
+        * `16:30` - 16:30
+        * `17:00` - 17:00
+        * `17:30` - 17:30
+        * `18:00` - 18:00
+        * `18:30` - 18:30
+        * `19:00` - 19:00
+        * `19:30` - 19:30
+        * `20:00` - 20:00
+    ItemEntradaRequest:
+      type: object
+      properties:
+        plato:
+          type: integer
+        cantidad:
+          type: integer
+          maximum: 50
+          minimum: 1
+      required:
+      - cantidad
+      - plato
+    ItemPedido:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        plato:
+          type: integer
+          readOnly: true
+        plato_nombre:
+          type: string
+          readOnly: true
+        cantidad:
+          type: integer
+          readOnly: true
+        precio_unitario:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,7}(?:\.\d{0,2})?$
+          readOnly: true
+        subtotal:
+          type: string
+          readOnly: true
+      required:
+      - cantidad
+      - id
+      - plato
+      - plato_nombre
+      - precio_unitario
+      - subtotal
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+      required:
+      - email
+      - password
+    PaginatedCategoriaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
+    PaginatedCierreCajaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CierreCaja'
+    PaginatedFacturaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Factura'
+    PaginatedPedidoList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pedido'
+    PaginatedPlatoList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Plato'
+    PaginatedReservaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reserva'
+    PaginatedUsuarioList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Usuario'
+    PatchedCategoriaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          pattern: ^\w[\w ,.'&()/\-]*$
+          maxLength: 60
+        descripcion:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 999
+          minimum: 0
+          default: 0
+        activa:
+          type: boolean
+          default: true
+    PatchedPerfilRequest:
+      type: object
+      description: El usuario solo edita su nombre, apellido y teléfono; el correo
+        y el rol son de solo lectura.
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        last_name:
+          type: string
+          minLength: 1
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        telefono:
+          oneOf:
+          - type: string
+            maxLength: 40
+            pattern: ^\+?\d{7,15}$
+          - type: string
+            maxLength: 0
+    PatchedPlatoRequest:
+      type: object
+      properties:
+        categoria:
+          type: integer
+        nombre:
+          type: string
+          minLength: 1
+          pattern: ^\w[\w ,.'&()/\-]*$
+          maxLength: 100
+        descripcion:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        precio:
+          type: string
+          pattern: ^\d{1,7}([.,]\d{1,2})?$
+          example: '28000.50'
+        disponible:
+          type: boolean
+          default: true
+        destacado:
+          type: boolean
+          default: false
+        imagen:
+          type: string
+          format: binary
+          nullable: true
+    Pedido:
+      type: object
+      description: 'Pedido completo (solo lectura): ítems con el precio congelado
+        al pedir, total y estado.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mesa:
+          type: integer
+          readOnly: true
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/EstadoPedidoEnum'
+          readOnly: true
+        estado_etiqueta:
+          type: string
+          readOnly: true
+        siguiente_estado:
+          type: string
+          nullable: true
+          readOnly: true
+        puede_cancelarse:
+          type: boolean
+          readOnly: true
+        notas:
+          type: string
+          readOnly: true
+        cliente:
+          type: integer
+          readOnly: true
+          nullable: true
+        cliente_nombre:
+          type: string
+          nullable: true
+          readOnly: true
+        creado_por:
+          type: integer
+          readOnly: true
+          title: Registrado por
+        registrado_por_nombre:
+          type: string
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPedido'
+          readOnly: true
+        total:
+          type: string
+          readOnly: true
+        factura:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            numero:
+              type: string
+            total:
+              type: string
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizado:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actualizado
+      - cliente
+      - cliente_nombre
+      - creado
+      - creado_por
+      - estado
+      - estado_etiqueta
+      - factura
+      - id
+      - items
+      - mesa
+      - notas
+      - puede_cancelarse
+      - registrado_por_nombre
+      - siguiente_estado
+      - total
+    PedidoCrearRequest:
+      type: object
+      description: Entrada de un pedido. El precio se toma SIEMPRE de la base de datos;
+        cualquier otro dato enviado se ignora.
+      properties:
+        mesa:
+          type: integer
+          maximum: 99
+          minimum: 1
+        notas:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemEntradaRequest'
+      required:
+      - items
+      - mesa
+    Perfil:
+      type: object
+      description: El usuario solo edita su nombre, apellido y teléfono; el correo
+        y el rol son de solo lectura.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo electrónico
+        first_name:
+          type: string
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        last_name:
+          type: string
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        telefono:
+          oneOf:
+          - type: string
+            maxLength: 40
+            pattern: ^\+?\d{7,15}$
+          - type: string
+            maxLength: 0
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - id
+      - last_name
+      - rol
+    PersonalRequest:
+      type: object
+      description: Alta de personal (mesero o administrador) hecha por un administrador.
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        last_name:
+          type: string
+          minLength: 1
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        telefono:
+          oneOf:
+          - type: string
+            maxLength: 40
+            pattern: ^\+?\d{7,15}$
+          - type: string
+            maxLength: 0
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+        password_confirmacion:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+        rol:
+          $ref: '#/components/schemas/RolPersonalEnum'
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - password_confirmacion
+      - rol
+    Plato:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        categoria:
+          type: integer
+        categoria_nombre:
+          type: string
+          readOnly: true
+        nombre:
+          type: string
+          pattern: ^\w[\w ,.'&()/\-]*$
+          maxLength: 100
+        descripcion:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        precio:
+          type: string
+          pattern: ^\d{1,7}([.,]\d{1,2})?$
+          example: '28000.50'
+        disponible:
+          type: boolean
+          default: true
+        destacado:
+          type: boolean
+          default: false
+        imagen:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - categoria
+      - categoria_nombre
+      - id
+      - nombre
+      - precio
+    PlatoRequest:
+      type: object
+      properties:
+        categoria:
+          type: integer
+        nombre:
+          type: string
+          minLength: 1
+          pattern: ^\w[\w ,.'&()/\-]*$
+          maxLength: 100
+        descripcion:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        precio:
+          type: string
+          pattern: ^\d{1,7}([.,]\d{1,2})?$
+          example: '28000.50'
+        disponible:
+          type: boolean
+          default: true
+        destacado:
+          type: boolean
+          default: false
+        imagen:
+          type: string
+          format: binary
+          nullable: true
+      required:
+      - categoria
+      - nombre
+      - precio
+    PlatoVendido:
+      type: object
+      properties:
+        plato:
+          type: string
+        unidades:
+          type: integer
+        ingresos:
+          type: string
+      required:
+      - ingresos
+      - plato
+      - unidades
+    RegistroRequest:
+      type: object
+      description: 'Registro público: SIEMPRE crea un cliente; el rol nunca se acepta
+        desde la petición.'
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        last_name:
+          type: string
+          minLength: 1
+          pattern: ^[^\W\d_]+(?:[ '\-][^\W\d_]+)*$
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        telefono:
+          oneOf:
+          - type: string
+            maxLength: 40
+            pattern: ^\+?\d{7,15}$
+          - type: string
+            maxLength: 0
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+        password_confirmacion:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - password_confirmacion
+    ReporteVentas:
+      type: object
+      properties:
+        desde:
+          type: string
+          format: date
+        hasta:
+          type: string
+          format: date
+        total_ventas:
+          type: string
+        facturas:
+          type: integer
+        ticket_promedio:
+          type: string
+        ventas_por_dia:
+          type: array
+          items:
+            $ref: '#/components/schemas/VentaDia'
+        platos_mas_vendidos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlatoVendido'
+      required:
+      - desde
+      - facturas
+      - hasta
+      - platos_mas_vendidos
+      - ticket_promedio
+      - total_ventas
+      - ventas_por_dia
+    Reserva:
+      type: object
+      description: Reserva completa (solo lectura).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fecha:
+          type: string
+          format: date
+          readOnly: true
+        hora:
+          type: string
+          format: time
+          readOnly: true
+        fin:
+          type: string
+          readOnly: true
+        personas:
+          type: integer
+          readOnly: true
+        mesa:
+          type: integer
+          readOnly: true
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/EstadoReservaEnum'
+          readOnly: true
+        estado_etiqueta:
+          type: string
+          readOnly: true
+        notas:
+          type: string
+          readOnly: true
+        cliente:
+          type: integer
+          readOnly: true
+        cliente_nombre:
+          type: string
+          readOnly: true
+        puede_confirmarse:
+          type: boolean
+          readOnly: true
+        puede_completarse:
+          type: boolean
+          readOnly: true
+        puede_cancelarse:
+          type: boolean
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cliente
+      - cliente_nombre
+      - creado
+      - estado
+      - estado_etiqueta
+      - fecha
+      - fin
+      - hora
+      - id
+      - mesa
+      - notas
+      - personas
+      - puede_cancelarse
+      - puede_completarse
+      - puede_confirmarse
+    ReservaCrearRequest:
+      type: object
+      description: 'Entrada de una reserva. El cliente y el estado nunca se reciben:
+        son el usuario autenticado y «pendiente».'
+      properties:
+        fecha:
+          type: string
+          format: date
+        hora:
+          $ref: '#/components/schemas/HoraEnum'
+        personas:
+          type: integer
+          maximum: 12
+          minimum: 1
+        mesa:
+          type: integer
+          maximum: 99
+          minimum: 1
+        notas:
+          oneOf:
+          - type: string
+            pattern: ^[^<>\u0000-\u0008\u000b-\u001f\u007f]*$
+            maxLength: 200
+          - type: string
+            maxLength: 0
+      required:
+      - fecha
+      - hora
+      - mesa
+      - personas
+    ResumenCaja:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        ventas_del_dia:
+          type: string
+        facturas:
+          type: integer
+          description: Solo administrador.
+        pedidos_sin_cerrar:
+          type: integer
+          description: Solo administrador.
+        cierre:
+          allOf:
+          - $ref: '#/components/schemas/CierreCaja'
+          nullable: true
+          description: Solo administrador.
+      required:
+      - fecha
+      - ventas_del_dia
+    RolEnum:
+      enum:
+      - cliente
+      - mesero
+      - administrador
+      type: string
+      description: |-
+        * `cliente` - Cliente
+        * `mesero` - Mesero
+        * `administrador` - Administrador
+    RolPersonalEnum:
+      enum:
+      - mesero
+      - administrador
+      type: string
+      description: |-
+        * `mesero` - Mesero
+        * `administrador` - Administrador
+    Salud:
+      type: object
+      properties:
+        estado:
+          type: string
+        servicio:
+          type: string
+        version:
+          type: string
+      required:
+      - estado
+      - servicio
+      - version
+    Sesion:
+      type: object
+      description: 'Respuesta de registro e ingreso: el token que se envía en `Authorization:
+        Token <token>` y la cuenta.'
+      properties:
+        token:
+          type: string
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+      required:
+      - token
+      - usuario
+    Usuario:
+      type: object
+      description: Datos públicos de una cuenta (solo lectura).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo electrónico
+        first_name:
+          type: string
+          readOnly: true
+          title: Nombre
+        last_name:
+          type: string
+          readOnly: true
+          title: Apellido
+        telefono:
+          type: string
+          readOnly: true
+          title: Teléfono
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Activo
+          description: Indica si el usuario debe ser tratado como activo. Desmarque
+            esta opción en lugar de borrar la cuenta.
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Fecha de alta
+      required:
+      - date_joined
+      - email
+      - first_name
+      - id
+      - is_active
+      - last_name
+      - rol
+      - telefono
+    VentaDia:
+      type: object
+      properties:
+        dia:
+          type: string
+          format: date
+        facturas:
+          type: integer
+        total:
+          type: string
+      required:
+      - dia
+      - facturas
+      - total
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
