@@ -6,7 +6,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.2.0] - 2026-11-04
+## [0.3.0] - 2026-11-04
+
+### Añadido
+- App `menu` con los modelos `Categoria` y `Plato` (nombre único sin distinguir mayúsculas, precio con rango, disponibilidad, marca de destacado y foto).
+- Carta pública: `GET /api/v1/platos/` (búsqueda y filtro por categoría) y `GET /api/v1/categorias/`; sin credenciales solo se ven platos disponibles de categorías activas.
+- `GET /api/v1/platos/destacados/` (máximo 6, público).
+- Gestión para el administrador: crear, reemplazar, editar y eliminar platos y categorías. El mesero solo alterna la disponibilidad de un plato con `POST /api/v1/platos/{id}/disponibilidad/`.
+- Fotos de los platos por `multipart/form-data`: JPG, PNG o WebP reales de hasta 2 MB y 4000 px por lado, verificadas por su contenido, con nombre aleatorio y limpieza del archivo al reemplazar, quitar o eliminar.
+- Eliminar una categoría con platos responde 409 (`Conflicto`).
+- `MontoField` en `apps/comun`: dinero solo con dígitos, hasta 2 decimales, positivo y de máximo 9 dígitos; rechaza notación científica, signos, símbolos, booleanos y otros tipos.
+- Filtros validados: una búsqueda o un filtro inválido responde 400 con el detalle.
+- Comando `cargar_menu_demo` para cargar un menú de ejemplo.
+- 65 pruebas nuevas (122 en total): precios, textos y categorías manipuladas, entradas hostiles, fotos falsas, permisos por rol y limpieza de archivos.
 
 ### Añadido
 - App `usuarios` con modelo `Usuario` propio: acceso con correo electrónico y tres roles (cliente, mesero, administrador).
