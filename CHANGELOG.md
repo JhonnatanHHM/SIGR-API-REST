@@ -6,7 +6,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.7.0] - 2026-11-04
+## [0.8.0] - 2026-11-04
+
+### Añadido
+- Referencia de la API (`docs/api.md`): convenciones, códigos de estado, reglas de validación, tabla de los 42 endpoints con su acceso y sus respuestas, ejemplos en PowerShell e instrucciones para importar en Postman.
+- Esquema OpenAPI exportado (`docs/openapi.yaml`) para importar en Postman o en cualquier cliente de APIs.
+- Arquitectura, estructura de carpetas y convenciones (`docs/arquitectura.md`), diagrama entidad–relación y diccionario de datos (`docs/base-de-datos.md`) y manual de despliegue para Windows y Linux (`docs/despliegue.md`).
+
+### Cambiado
+- README reescrito como documento final: módulos, roles, puesta en marcha, usuarios de demostración, cómo probar la API, pruebas y enlaces a toda la documentación.
 
 ### Añadido
 - Pruebas de integración de extremo a extremo (`apps/integracion`): de la cuenta nueva a la reserva, el pedido, la factura, el cierre de caja y el reporte, más cancelaciones, alta de personal, platos agotados y cierre de sesión.
