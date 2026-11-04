@@ -6,7 +6,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.3.0] - 2026-11-04
+## [0.4.0] - 2026-11-04
+
+### Añadido
+- App `pedidos` con los modelos `Pedido` e `ItemPedido`; el precio de cada ítem se congela al crear el pedido.
+- `POST /api/v1/pedidos/`: el cliente crea el suyo y el personal registra pedidos de mesa. Mesa de 1 a 99, cantidades de 1 a 50, notas validadas y platos disponibles; el precio nunca se recibe del cliente. Responde 201 con la cabecera `Location`.
+- `GET /api/v1/pedidos/` (filtros `estado`, incluido `activos`, y `mesa`, con paginación) y `GET /api/v1/pedidos/{id}/`: el cliente solo ve los suyos (los ajenos responden 404) y el personal ve todos.
+- Flujo de estados Pendiente → En preparación → Listo → Servido → Cerrado con `POST /api/v1/pedidos/{id}/avanzar/` (solo personal) y cancelación mientras está pendiente con `POST /api/v1/pedidos/{id}/cancelar/`.
+- Control de concurrencia: si se envía `desde` y el pedido ya cambió de estado, la API responde 409 en lugar de saltarse pasos; el pedido se bloquea durante el cambio.
+- Un plato con pedidos asociados responde 409 al eliminarse.
+- Esquema OpenAPI sin avisos (nombres de enumeraciones y tipos de parámetros).
+- 45 pruebas nuevas (167 en total): estados, validación de mesa, cantidades, notas e ítems, visibilidad por rol, filtros con inyección SQL y cambios de estado desactualizados.
 
 ### Añadido
 - App `menu` con los modelos `Categoria` y `Plato` (nombre único sin distinguir mayúsculas, precio con rango, disponibilidad, marca de destacado y foto).
