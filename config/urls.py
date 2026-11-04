@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/v1/", include("apps.menu.urls")),
     path("api/v1/", include("apps.pedidos.urls")),
     path("api/v1/", include("apps.reservas.urls")),
+    path("api/v1/", include("apps.caja.urls")),
     # Documentación OpenAPI: el esquema se puede importar en Postman
     path("api/schema/", SpectacularAPIView.as_view(), name="esquema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="esquema"), name="swagger"),
