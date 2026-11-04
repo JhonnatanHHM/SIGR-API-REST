@@ -1,0 +1,27 @@
+name: Guardia de ramas
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  origen-permitido:
+    name: origen-permitido
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar rama de origen según destino
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          echo "PR: $HEAD -> $BASE"
+          if [ "$BASE" = "main" ] && [ "$HEAD" != "dev" ]; then
+            echo "::error::A main solo se llega desde dev."
+            exit 1
+          fi
+          if [ "$BASE" = "dev" ]; then
+            case "$HEAD" in
+              feature/*|fix/*|chore/*|docs/*|test/*|refactor/*|hotfix/*) ;;
+              *) echo "::error::A dev solo llegan ramas feature/*, fix/*, chore/*, docs/*, test/*, refactor/* o hotfix/*."; exit 1 ;;
+            esac
+          fi
