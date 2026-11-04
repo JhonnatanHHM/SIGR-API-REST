@@ -76,21 +76,22 @@ La colección se puede ejecutar varias veces seguidas: usa correos, nombres, fec
 ## 2. Selenium WebDriver
 
 ### 2.1 Preparar el entorno (una sola vez)
+Se usa el mismo entorno de la API. Desde la raíz del proyecto, con el entorno activado (`.venv\Scripts\Activate.ps1`):
 ```powershell
-python -m venv .venv-selenium
-.venv-selenium\Scripts\pip install -r pruebas\selenium\requirements.txt
+pip install -r pruebas\selenium\requirements.txt
 ```
 Se necesita Chrome o Edge instalado; Selenium descarga el controlador solo (requiere internet la primera vez).
 
 ### 2.2 Ejecutar
+Con el entorno activado, desde `pruebas\selenium`:
 ```powershell
 cd pruebas\selenium
-..\..\.venv-selenium\Scripts\python -m pytest                    # todo, sin ventana
-..\..\.venv-selenium\Scripts\python -m pytest --visible          # viendo el navegador trabajar
-..\..\.venv-selenium\Scripts\python -m pytest -m registro        # solo el formulario de registro
-..\..\.venv-selenium\Scripts\python -m pytest -m ingreso         # solo el de ingreso
-..\..\.venv-selenium\Scripts\python -m pytest --navegador edge   # con Edge
-..\..\.venv-selenium\Scripts\python -m pytest --url http://127.0.0.1:8000
+python -m pytest                    # todo, sin ventana
+python -m pytest --visible          # viendo el navegador trabajar
+python -m pytest -m registro        # solo el formulario de registro
+python -m pytest -m ingreso         # solo el de ingreso
+python -m pytest --navegador edge   # con Edge
+python -m pytest --url http://127.0.0.1:8000
 ```
 Resultado esperado: **25 pruebas aprobadas** (15 de registro y 10 de ingreso), unos 2 minutos.
 
