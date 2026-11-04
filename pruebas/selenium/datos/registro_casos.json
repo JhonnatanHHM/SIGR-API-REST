@@ -1,0 +1,16 @@
+[
+  {"id": "datos-validos", "descripcion": "Registro con todos los datos válidos", "cambios": {}, "esperado": "exito"},
+  {"id": "telefono-opcional", "descripcion": "El teléfono es opcional", "cambios": {"telefono": ""}, "esperado": "exito"},
+  {"id": "nombre-con-apostrofo-y-guion", "descripcion": "Nombres con apóstrofo y guion son válidos", "cambios": {"first_name": "María-José", "last_name": "O'Brien"}, "esperado": "exito"},
+  {"id": "correo-sin-formato", "descripcion": "Correo sin formato de correo", "cambios": {"email": "no-es-un-correo"}, "esperado": ["email"]},
+  {"id": "correo-vacio", "descripcion": "Correo vacío", "cambios": {"email": ""}, "esperado": ["email"]},
+  {"id": "nombre-vacio", "descripcion": "Nombre vacío", "cambios": {"first_name": ""}, "esperado": ["first_name"]},
+  {"id": "apellido-con-numeros", "descripcion": "Apellido con números", "cambios": {"last_name": "Gómez123"}, "esperado": ["last_name"]},
+  {"id": "nombre-con-script", "descripcion": "Etiqueta script en el nombre (XSS)", "cambios": {"first_name": "<script>alert(1)</script>"}, "esperado": ["first_name"]},
+  {"id": "nombre-con-sql", "descripcion": "Sentencia SQL en el nombre (inyección)", "cambios": {"first_name": "Robert'); DROP TABLE usuarios;--"}, "esperado": ["first_name"]},
+  {"id": "telefono-con-letras", "descripcion": "Teléfono con letras", "cambios": {"telefono": "abc123"}, "esperado": ["telefono"]},
+  {"id": "contrasenas-distintas", "descripcion": "Las dos contraseñas no coinciden", "cambios": {"password2": "Otra-Clave-2026!"}, "esperado": ["password2"]},
+  {"id": "contrasena-solo-numeros", "descripcion": "Contraseña solo numérica", "cambios": {"password1": "12345678", "password2": "12345678"}, "esperado": ["password2"]},
+  {"id": "contrasena-corta", "descripcion": "Contraseña de 3 caracteres", "cambios": {"password1": "abc", "password2": "abc"}, "esperado": ["password2"]},
+  {"id": "todo-vacio", "descripcion": "Formulario enviado sin datos", "cambios": {"first_name": "", "last_name": "", "email": "", "telefono": "", "password1": "", "password2": ""}, "esperado": ["first_name", "last_name", "email", "password1", "password2"]}
+]
