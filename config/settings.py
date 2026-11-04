@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "apps.usuarios",
     "apps.menu",
     "apps.pedidos",
+    "apps.reservas",
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,8 @@ SPECTACULAR_SETTINGS = {
         "RolPersonalEnum": "apps.usuarios.serializers.ROLES_PERSONAL",
         "EstadoPedidoEnum": "apps.pedidos.models.Estado",
         "EstadoPedidoFiltroEnum": "apps.pedidos.serializers.ESTADOS_FILTRO",
+        "EstadoReservaEnum": "apps.reservas.models.EstadoReserva",
+        "EstadoReservaFiltroEnum": "apps.reservas.serializers.ESTADOS_FILTRO",
     },
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
