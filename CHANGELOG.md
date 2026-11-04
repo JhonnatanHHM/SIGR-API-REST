@@ -6,7 +6,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.5.0] - 2026-11-04
+## [0.6.0] - 2026-11-04
+
+### Añadido
+- App `caja` con los modelos `Factura` y `CierreCaja`.
+- Facturación: al cerrar un pedido con `POST /api/v1/pedidos/{id}/avanzar/` se emite automáticamente su factura numerada (`F-000001`), una sola por pedido y con el total congelado. El pedido incluye ahora el campo `factura`.
+- `GET /api/v1/caja/facturas/` (administrador) y `GET /api/v1/caja/facturas/{id}/` con el detalle del pedido: el personal ve cualquiera y el cliente solo la de sus pedidos (las ajenas responden 404).
+- Cierre de caja (solo administrador): `POST /api/v1/caja/cierres/` registra el efectivo contado, lo compara con las ventas facturadas del día y guarda la diferencia (cuadrado, sobrante o faltante). Un cierre no se puede modificar, eliminar (405) ni repetir para el mismo día (409). `GET /api/v1/caja/cierres/` y `GET /api/v1/caja/cierres/{id}/`.
+- Reglas del cierre: no se cierra una fecha futura ni un día con pedidos sin cerrar (400); con la caja de hoy cerrada ya no se pueden cerrar más pedidos (409).
+- `GET /api/v1/caja/reportes/ventas/` (administrador): ventas por día, total, número de facturas, ticket promedio y platos más vendidos, con rango de fechas validado (formato ISO, desde ≤ hasta ≤ hoy, máximo un año; 400 si es inválido).
+- `GET /api/v1/caja/resumen/`: el mesero solo recibe el total de ventas del día; el administrador recibe además facturas, pedidos sin cerrar y el cierre.
+- 48 pruebas nuevas (262 en total): facturación y numeración, diferencias de caja, inmutabilidad de los cierres, totales de reportes, efectivo y fechas mal formados, inyección SQL en parámetros y permisos por rol.
 
 ### Añadido
 - App `reservas` con el modelo `Reserva` (fecha, hora, personas, mesa, notas y estado).

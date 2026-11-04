@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.comun.campos import TextoField
@@ -35,14 +36,25 @@ class PedidoSerializer(serializers.ModelSerializer):
     puede_cancelarse = serializers.BooleanField(read_only=True)
     cliente_nombre = serializers.SerializerMethodField()
     registrado_por_nombre = serializers.SerializerMethodField()
+    factura = serializers.SerializerMethodField()
 
     class Meta:
         model = Pedido
         fields = (
             "id", "mesa", "estado", "estado_etiqueta", "siguiente_estado", "puede_cancelarse", "notas", "cliente",
-            "cliente_nombre", "creado_por", "registrado_por_nombre", "items", "total", "creado", "actualizado",
+            "cliente_nombre", "creado_por", "registrado_por_nombre", "items", "total", "factura", "creado", "actualizado",
         )
         read_only_fields = fields
+
+    @extend_schema_field({
+        "type": "object", "nullable": True,
+        "properties": {"id": {"type": "integer"}, "numero": {"type": "string"}, "total": {"type": "string"}},
+    })
+    def get_factura(self, pedido):
+        factura = getattr(pedido, "factura", None)      # None mientras el pedido no se haya cerrado
+        if factura is None:
+            return None
+        return {"id": factura.pk, "numero": factura.numero, "total": _dinero(factura.total)}
 
     def get_total(self, pedido) -> str:
         return _dinero(pedido.total)
