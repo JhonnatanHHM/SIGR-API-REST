@@ -66,6 +66,8 @@ El comando `cargar_usuarios_demo` se niega a ejecutarse con `DJANGO_DEBUG=0`, po
 .venv\Scripts\python manage.py test --settings=config.settings_test   # rápidas, SQLite en memoria
 .venv\Scripts\python manage.py test --settings=config.settings_ci     # sobre PostgreSQL (lo mismo que el CI)
 ```
+Para ver el resultado como informe (✔/✘ por prueba, agrupado por módulo y con tabla resumen), agrega `--testrunner config.runner.InformeRunner`; también se puede ejecutar un solo módulo, por ejemplo `manage.py test apps.menu`.
+
 Incluyen pruebas por módulo (modelos, serializadores y API), pruebas de integración de extremo a extremo y una matriz de acceso por rol generada desde el esquema OpenAPI. En GitHub, el flujo `pruebas` las ejecuta en cada Pull Request y su resultado es obligatorio para fusionar.
 
 ## Flujo de trabajo y versionado
