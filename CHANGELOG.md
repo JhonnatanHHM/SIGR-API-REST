@@ -6,6 +6,24 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.0.0] - 2026-11-04
+
+**Primera versión estable de la API REST del Sistema Integral de Gestión de Restaurante (SIGR).** A partir de aquí, cualquier cambio en los endpoints se gestiona como una solicitud de cambio y se publica con una versión nueva (compatibles: `1.x.0`; incompatibles: `2.0.0`).
+
+### Incluye
+- Autenticación por token con roles de cliente, mesero y administrador (`0.2.0`).
+- Menú digital con carta pública, gestión de platos y categorías y fotos validadas (`0.3.0`).
+- Pedidos con precios congelados, flujo de estados y control de concurrencia (`0.4.0`).
+- Reservas con bloqueo de cruces (`0.5.0`).
+- Facturación, cierre de caja inmutable y reportes de ventas (`0.6.0`).
+- Pruebas de integración, matriz de acceso por rol y barrido de seguridad de entradas (`0.7.0`).
+- Referencia de la API, esquema OpenAPI para Postman, arquitectura, base de datos y despliegue (`0.8.0`).
+
+### Verificación de la versión
+- Instalación desde cero a partir de un clon limpio del repositorio, con entorno de Python y base de datos nuevos: `check`, migraciones, datos de demostración y esquema OpenAPI sin avisos.
+- 291 pruebas automáticas en verde sobre PostgreSQL.
+- Recorrido por HTTP real con el servidor en marcha: ingreso de los tres roles, carta pública, pedido, avance de estados, factura, cierre de caja, reporte y los códigos 400, 401, 403, 404, 405 y 409 esperados.
+
 ## [0.8.0] - 2026-11-04
 
 ### Añadido
