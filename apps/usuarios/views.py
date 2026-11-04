@@ -7,6 +7,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.comun.ubicacion import UbicacionAlCrearMixin
+
 from .models import Rol, Usuario
 from .permisos import EsAdministrador
 from .serializers import (
@@ -78,7 +80,7 @@ class YoView(RetrieveUpdateAPIView):
 
 
 @extend_schema(tags=["Usuarios"])
-class UsuarioViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class UsuarioViewSet(UbicacionAlCrearMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Administración de usuarios (solo administrador): listar con búsqueda, ver y dar de alta personal."""
 
     queryset = Usuario.objects.all()
@@ -122,4 +124,5 @@ class UsuarioViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Cr
         serializador = PersonalSerializer(data=request.data)
         serializador.is_valid(raise_exception=True)
         usuario = serializador.crear_usuario()
-        return Response(UsuarioSerializer(usuario).data, status=status.HTTP_201_CREATED)
+        datos = UsuarioSerializer(usuario).data
+        return Response(datos, status=status.HTTP_201_CREATED, headers=self.get_success_headers(datos))

@@ -140,6 +140,13 @@ class CrudDelAdministradorTests(DatosMenuMixin, TestCase):
         self.assertEqual((cuerpo["nombre"], cuerpo["precio"], cuerpo["destacado"], cuerpo["disponible"]), ("Flan", "12500.50", True, True))
         self.assertIsNone(cuerpo["imagen"])
 
+    def test_crear_plato_y_categoria_informan_su_ubicacion(self):
+        r = self.c.post(reverse("plato-list"), self.datos_plato(nombre="Natilla"), format="json")
+        self.assertEqual(r["Location"], f"/api/v1/platos/{r.json()['id']}/")
+        r = self.c.post(reverse("categoria-list"), {"nombre": "Postres frios", "orden": 4}, format="json")
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual(r["Location"], f"/api/v1/categorias/{r.json()['id']}/")
+
     def test_precio_como_numero_json(self):
         self.assertEqual(self.c.post(reverse("plato-list"), self.datos_plato(precio=8000.5), format="json").json()["precio"], "8000.50")
 

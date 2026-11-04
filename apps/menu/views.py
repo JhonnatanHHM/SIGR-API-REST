@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.comun.excepciones import Conflicto
+from apps.comun.ubicacion import UbicacionAlCrearMixin
 from apps.usuarios.permisos import EsAdministrador, EsPersonal
 
 from .models import Categoria, Plato
@@ -27,7 +28,7 @@ def _es_personal(usuario):
     destroy=extend_schema(summary="Eliminar una categoría (administrador); 409 si tiene platos"),
 )
 @extend_schema(tags=["Menú: categorías"])
-class CategoriaViewSet(viewsets.ModelViewSet):
+class CategoriaViewSet(UbicacionAlCrearMixin, viewsets.ModelViewSet):
     serializer_class = CategoriaSerializer
 
     def get_permissions(self):
@@ -64,7 +65,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     destroy=extend_schema(summary="Eliminar un plato (administrador); 409 si tiene pedidos"),
 )
 @extend_schema(tags=["Menú: platos"])
-class PlatoViewSet(viewsets.ModelViewSet):
+class PlatoViewSet(UbicacionAlCrearMixin, viewsets.ModelViewSet):
     serializer_class = PlatoSerializer
 
     def get_permissions(self):
