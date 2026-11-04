@@ -1,0 +1,74 @@
+[
+  {
+    "descripcion": "credenciales correctas",
+    "email": "cliente@sigr.test",
+    "clave": "Prueba-Segura-2026!",
+    "esperado": 200
+  },
+  {
+    "descripcion": "correo en mayúsculas",
+    "email": "CLIENTE@SIGR.TEST",
+    "clave": "Prueba-Segura-2026!",
+    "esperado": 200
+  },
+  {
+    "descripcion": "correo con espacios alrededor",
+    "email": "  cliente@sigr.test  ",
+    "clave": "Prueba-Segura-2026!",
+    "esperado": 200
+  },
+  {
+    "descripcion": "contraseña incorrecta",
+    "email": "cliente@sigr.test",
+    "clave": "otra-clave",
+    "esperado": 401
+  },
+  {
+    "descripcion": "SQL en la contraseña",
+    "email": "cliente@sigr.test",
+    "clave": "' OR '1'='1",
+    "esperado": 401
+  },
+  {
+    "descripcion": "SQL en el correo (OR 1=1)",
+    "email": "' OR 1=1 --",
+    "clave": "x",
+    "esperado": 400
+  },
+  {
+    "descripcion": "SQL con comilla tras un correo válido",
+    "email": "cliente@sigr.test' OR '1'='1",
+    "clave": "x",
+    "esperado": 400
+  },
+  {
+    "descripcion": "script en el correo",
+    "email": "<script>alert(1)</script>@x.com",
+    "clave": "x",
+    "esperado": 400
+  },
+  {
+    "descripcion": "correo vacío",
+    "email": "",
+    "clave": "x",
+    "esperado": 400
+  },
+  {
+    "descripcion": "contraseña vacía",
+    "email": "cliente@sigr.test",
+    "clave": "",
+    "esperado": 400
+  },
+  {
+    "descripcion": "correo de 300 caracteres",
+    "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@x.com",
+    "clave": "x",
+    "esperado": 400
+  },
+  {
+    "descripcion": "correo inexistente",
+    "email": "nadie@sigr.test",
+    "clave": "Prueba-Segura-2026!",
+    "esperado": 401
+  }
+]

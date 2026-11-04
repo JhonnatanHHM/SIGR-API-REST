@@ -1,0 +1,4313 @@
+{
+  "info": {
+    "name": "SIGR API REST - Pruebas automatizadas",
+    "description": "Pruebas de la API REST del SIGR (v1.0.0). Requiere el servidor en marcha y los datos de demostración cargados (cargar_usuarios_demo y cargar_menu_demo). Ejecutar en orden, de la carpeta 00 a la 06; la 07 usa un archivo de datos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 Preparación",
+      "description": "Salud del servicio, ingreso de los tres roles y datos base. Ejecutar siempre primero.",
+      "item": [
+        {
+          "name": "Salud del servicio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"estado ok y versión informada\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"ok\"); pm.expect(j.version).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/salud/"
+          }
+        },
+        {
+          "name": "Ingreso administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"entrega token y rol administrador\", () => { const j = pm.response.json(); pm.expect(j.token).to.be.a(\"string\"); pm.expect(j.usuario.rol).to.eql(\"administrador\"); pm.collectionVariables.set(\"token_admin\", j.token); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@sigr.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ingreso mesero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"entrega token y rol mesero\", () => { const j = pm.response.json(); pm.expect(j.token).to.be.a(\"string\"); pm.expect(j.usuario.rol).to.eql(\"mesero\"); pm.collectionVariables.set(\"token_mesero\", j.token); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mesero@sigr.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ingreso cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"entrega token y rol cliente\", () => { const j = pm.response.json(); pm.expect(j.token).to.be.a(\"string\"); pm.expect(j.usuario.rol).to.eql(\"cliente\"); pm.collectionVariables.set(\"token_cliente\", j.token); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@sigr.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Plato base para los pedidos (carta pública)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"la carta trae platos y se guarda el primero\", () => { const j = pm.response.json(); pm.expect(j.results.length).to.be.above(0); pm.collectionVariables.set(\"plato_id\", j.results[0].id); pm.collectionVariables.set(\"plato_precio\", j.results[0].precio); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 Autenticación",
+      "description": "Registro, ingreso, salida y perfil, con entradas válidas y mal formadas.",
+      "item": [
+        {
+          "name": "Registro válido",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email_nuevo', `nuevo.${Date.now()}.${Math.floor(Math.random()*1000)}@prueba.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"crea una cuenta de cliente con token\", () => { const j = pm.response.json(); pm.expect(j.usuario.rol).to.eql(\"cliente\"); pm.expect(j.usuario.email).to.eql(pm.collectionVariables.get(\"email_nuevo\")); pm.collectionVariables.set(\"token_nuevo\", j.token); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"{{email_nuevo}}\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro intentando ser administrador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email_nuevo', `nuevo.${Date.now()}.${Math.floor(Math.random()*1000)}@prueba.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"el campo rol del cliente se ignora\", () => { const j = pm.response.json(); pm.expect(j.usuario.rol).to.eql(\"cliente\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"{{email_nuevo}}\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"{{password}}\",\n  \"rol\": \"administrador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con correo sin formato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala el campo email\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"email\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"no-es-un-correo\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con correo repetido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400 (único sin distinguir mayúsculas)\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala el campo email\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"email\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"CLIENTE@sigr.test\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con contraseñas distintas",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email_nuevo', `nuevo.${Date.now()}.${Math.floor(Math.random()*1000)}@prueba.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"{{email_nuevo}}\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"Otra-Clave-2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con contraseña numérica",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email_nuevo', `nuevo.${Date.now()}.${Math.floor(Math.random()*1000)}@prueba.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala la contraseña\", () => { const j = pm.response.json(); pm.expect(JSON.stringify(j)).to.include(\"password\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"{{email_nuevo}}\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"12345678\",\n  \"password_confirmacion\": \"12345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con script en el nombre",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email_nuevo', `nuevo.${Date.now()}.${Math.floor(Math.random()*1000)}@prueba.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala first_name\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"first_name\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"<script>alert(1)</script>\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"{{email_nuevo}}\",\n  \"telefono\": \"+573001234567\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con teléfono inválido",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email_nuevo', `nuevo.${Date.now()}.${Math.floor(Math.random()*1000)}@prueba.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala telefono\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"telefono\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/registro/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Laura\",\n  \"last_name\": \"Gómez\",\n  \"email\": \"{{email_nuevo}}\",\n  \"telefono\": \"abc'; DROP TABLE x;--\",\n  \"password\": \"{{password}}\",\n  \"password_confirmacion\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ingreso con contraseña incorrecta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"mensaje genérico, sin revelar si el correo existe\", () => { const j = pm.response.json(); pm.expect(j.detail).to.eql(\"Credenciales inválidas.\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@sigr.test\",\n  \"password\": \"incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ingreso con cuerpo vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Perfil sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Indica el esquema de autenticación\", () => pm.expect(pm.response.headers.get(\"WWW-Authenticate\")).to.include(\"Token\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/yo/"
+          }
+        },
+        {
+          "name": "Perfil con token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"devuelve la cuenta del token\", () => { const j = pm.response.json(); pm.expect(j.email).to.eql(\"cliente@sigr.test\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/yo/"
+          }
+        },
+        {
+          "name": "Actualizar teléfono del perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"el teléfono queda normalizado\", () => { const j = pm.response.json(); pm.expect(j.telefono).to.eql(\"+573115550000\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_nuevo}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/yo/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"+573115550000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Intentar subirse de rol desde el perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"El rol no cambia (200 ignorado o 400 rechazado)\", () => pm.expect([200, 400]).to.include(pm.response.code));",
+                  "pm.test(\"sigue siendo cliente si hubo respuesta 200\", () => { const j = pm.response.json(); if (pm.response.code === 200) pm.expect(j.rol).to.eql(\"cliente\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_nuevo}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/yo/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rol\": \"administrador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Control de acceso por rol",
+      "description": "401 sin credenciales, 403 con el rol equivocado, 200 con el rol correcto.",
+      "item": [
+        {
+          "name": "Crear pedido sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 1,\n  \"items\": [\n    {\n      \"plato\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Token inventado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token token-falso-123"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/"
+          }
+        },
+        {
+          "name": "Cliente lista usuarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/usuarios/"
+          }
+        },
+        {
+          "name": "Mesero lista usuarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/usuarios/"
+          }
+        },
+        {
+          "name": "Administrador lista usuarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"respuesta paginada\", () => { const j = pm.response.json(); pm.expect(j).to.have.keys(\"count\", \"next\", \"previous\", \"results\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/usuarios/"
+          }
+        },
+        {
+          "name": "Cliente crea categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/categorias/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Intruso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mesero crea plato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Intruso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cliente alterna disponibilidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/{{plato_id}}/disponibilidad/"
+          }
+        },
+        {
+          "name": "Cliente avanza un pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/1/avanzar/"
+          }
+        },
+        {
+          "name": "Cliente confirma una reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/1/confirmar/"
+          }
+        },
+        {
+          "name": "Cliente consulta el resumen de caja",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/resumen/"
+          }
+        },
+        {
+          "name": "Mesero consulta facturas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/facturas/"
+          }
+        },
+        {
+          "name": "Mesero consulta reportes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/reportes/ventas/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Menú y búsquedas",
+      "description": "Carta pública, búsquedas con entradas hostiles y gestión de platos por el administrador.",
+      "item": [
+        {
+          "name": "Carta pública",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"cada plato trae id, nombre y precio con dos decimales\", () => { const j = pm.response.json(); j.results.forEach(p => { pm.expect(p.id).to.be.a(\"number\"); pm.expect(p.precio).to.match(/^\\d+\\.\\d{2}$/); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/"
+          }
+        },
+        {
+          "name": "Platos destacados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"máximo 6 platos\", () => { const j = pm.response.json(); const l = Array.isArray(j) ? j : j.results; pm.expect(l.length).to.be.at.most(6); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/destacados/"
+          }
+        },
+        {
+          "name": "Búsqueda legítima",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"encuentra la bandeja paisa\", () => { const j = pm.response.json(); pm.expect(j.results.map(p => p.nombre.toLowerCase()).join()).to.include(\"bandeja\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/?q=bandeja"
+          }
+        },
+        {
+          "name": "Búsqueda con inyección SQL clásica",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400 (no devuelve la carta completa)\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala el parámetro q\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"q\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/?q=%27%20OR%20%271%27%3D%271"
+          }
+        },
+        {
+          "name": "Búsqueda con DROP TABLE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/?q=%27%3B%20DROP%20TABLE%20menu_plato%3B--"
+          }
+        },
+        {
+          "name": "La carta sigue intacta tras el ataque",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"siguen existiendo platos\", () => { const j = pm.response.json(); pm.expect(j.count).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/"
+          }
+        },
+        {
+          "name": "Búsqueda con etiquetas HTML",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E"
+          }
+        },
+        {
+          "name": "Filtro de categoría no numérico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/?categoria=abc"
+          }
+        },
+        {
+          "name": "Crear categoría",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('nombre_categoria', 'Pruebas Postman ' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Incluye la cabecera Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/categorias/\"));",
+                  "pm.test(\"devuelve el id\", () => { const j = pm.response.json(); pm.collectionVariables.set(\"categoria_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/categorias/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombre_categoria}}\",\n  \"descripcion\": \"Temporal de pruebas\",\n  \"orden\": 5,\n  \"activa\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear categoría con HTML en el nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/categorias/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"<b>Hack</b>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear plato con precio textual",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('nombre_plato', 'Plato de prueba ' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"el error señala precio\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"precio\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"{{categoria_id}}\",\n  \"nombre\": \"{{nombre_plato}}\",\n  \"descripcion\": \"Creado por la colección de pruebas\",\n  \"precio\": \"abc\",\n  \"disponible\": true,\n  \"destacado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear plato con precio cero",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('nombre_plato', 'Plato de prueba ' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"{{categoria_id}}\",\n  \"nombre\": \"{{nombre_plato}}\",\n  \"descripcion\": \"Creado por la colección de pruebas\",\n  \"precio\": \"0\",\n  \"disponible\": true,\n  \"destacado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear plato con notación científica",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('nombre_plato', 'Plato de prueba ' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"{{categoria_id}}\",\n  \"nombre\": \"{{nombre_plato}}\",\n  \"descripcion\": \"Creado por la colección de pruebas\",\n  \"precio\": \"1e3\",\n  \"disponible\": true,\n  \"destacado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear plato válido (precio con coma)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('nombre_plato', 'Plato de prueba ' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"el precio queda normalizado a punto decimal\", () => { const j = pm.response.json(); pm.expect(j.precio).to.eql(\"15500.50\"); pm.collectionVariables.set(\"plato_prueba_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"{{categoria_id}}\",\n  \"nombre\": \"{{nombre_plato}}\",\n  \"descripcion\": \"Creado por la colección de pruebas\",\n  \"precio\": \"15500,50\",\n  \"disponible\": true,\n  \"destacado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear plato con nombre repetido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400 (único sin distinguir mayúsculas)\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"{{categoria_id}}\",\n  \"nombre\": \"{{NOMBRE_PLATO}}\",\n  \"descripcion\": \"Creado por la colección de pruebas\",\n  \"precio\": \"15500,50\",\n  \"disponible\": true,\n  \"destacado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mesero marca el plato como agotado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda no disponible\", () => { const j = pm.response.json(); pm.expect(j.disponible).to.eql(false); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/{{plato_prueba_id}}/disponibilidad/"
+          }
+        },
+        {
+          "name": "El público no ve un plato agotado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/{{plato_prueba_id}}/"
+          }
+        },
+        {
+          "name": "Mesero vuelve a habilitar el plato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda disponible\", () => { const j = pm.response.json(); pm.expect(j.disponible).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/{{plato_prueba_id}}/disponibilidad/"
+          }
+        },
+        {
+          "name": "Eliminar categoría con platos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/categorias/{{categoria_id}}/"
+          }
+        },
+        {
+          "name": "Eliminar el plato de prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/platos/{{plato_prueba_id}}/"
+          }
+        },
+        {
+          "name": "Eliminar la categoría de prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/categorias/{{categoria_id}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Pedidos",
+      "description": "Creación con precio congelado, validaciones, aislamiento entre clientes y flujo completo hasta la factura.",
+      "item": [
+        {
+          "name": "Cliente crea un pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Incluye la cabecera Location\", () => pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/pedidos/\"));",
+                  "pm.test(\"estado pendiente y total calculado en el servidor\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"pendiente\"); pm.expect(parseFloat(j.total)).to.eql(parseFloat(pm.collectionVariables.get(\"plato_precio\")) * 2); pm.collectionVariables.set(\"pedido_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con total y estado manipulados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"el servidor ignora total y estado enviados\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"pendiente\"); pm.expect(j.total).to.not.eql(\"1.00\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ],\n  \"total\": \"1.00\",\n  \"estado\": \"cerrado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con mesa 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 0,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con mesa 100",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 100,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con mesa textual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": \"cinco\",\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con cantidad 51",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 51\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con cantidad negativa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": -1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido sin platos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con plato repetido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 1\n    },\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con plato inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": 999999,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pedido con script en las notas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 5,\n  \"notas\": \"<script>alert(1)</script>\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listado con estado inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/?estado=hackeado"
+          }
+        },
+        {
+          "name": "El cliente ve su pedido en el listado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"el pedido creado aparece\", () => { const j = pm.response.json(); pm.expect(j.results.map(p => p.id)).to.include(pm.collectionVariables.get(\"pedido_id\")); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/"
+          }
+        },
+        {
+          "name": "Otro cliente no ve el pedido ajeno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404 (no revela que existe)\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_nuevo}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/"
+          }
+        },
+        {
+          "name": "Cliente intenta avanzar el pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/"
+          }
+        },
+        {
+          "name": "Mesero: pendiente → en preparación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda en estado en_preparacion\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"en_preparacion\");  });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"desde\": \"pendiente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Avance con estado desactualizado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409 (control de concurrencia)\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"desde\": \"pendiente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cliente cancela un pedido ya en preparación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/cancelar/"
+          }
+        },
+        {
+          "name": "Mesero: en preparación → listo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda en estado listo\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"listo\");  });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"desde\": \"en_preparacion\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mesero: listo → servido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda en estado servido\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"servido\");  });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"desde\": \"listo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mesero: servido → cerrado (emite factura)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda cerrado y con factura\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"cerrado\"); pm.expect(j.factura.numero).to.match(/^F-\\d+$/); pm.collectionVariables.set(\"factura_id\", j.factura.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"desde\": \"servido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Avanzar un pedido ya cerrado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_id}}/avanzar/"
+          }
+        },
+        {
+          "name": "El cliente consulta su factura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"la factura corresponde al pedido\", () => { const j = pm.response.json(); pm.expect(j.pedido).to.eql(pm.collectionVariables.get(\"pedido_id\")); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/facturas/{{factura_id}}/"
+          }
+        },
+        {
+          "name": "Otro cliente no ve la factura ajena",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_nuevo}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/facturas/{{factura_id}}/"
+          }
+        },
+        {
+          "name": "Factura inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/facturas/999999/"
+          }
+        },
+        {
+          "name": "Crear un pedido para cancelarlo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"se guarda su id\", () => { const j = pm.response.json(); pm.collectionVariables.set(\"pedido_cancelar_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mesa\": 7,\n  \"notas\": \"Sin cebolla\",\n  \"items\": [\n    {\n      \"plato\": \"{{plato_id}}\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cliente cancela su pedido pendiente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda cancelado\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"cancelado\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_cancelar_id}}/cancelar/"
+          }
+        },
+        {
+          "name": "Cancelar de nuevo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/pedidos/{{pedido_cancelar_id}}/cancelar/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Reservas",
+      "description": "Reglas de horario, bloqueo de cruces (409) y ciclo de vida de la reserva.",
+      "item": [
+        {
+          "name": "Cliente reserva una mesa",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const dia = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };",
+                  "pm.collectionVariables.set('reserva_fecha', dia(2 + Math.floor(Math.random() * 25)));",
+                  "pm.collectionVariables.set('reserva_mesa', 1 + Math.floor(Math.random() * 98));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"queda pendiente y dura 2 horas\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"pendiente\"); pm.expect(j.fin).to.eql(\"15:00\"); pm.collectionVariables.set(\"reserva_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Otro cliente reserva la misma mesa y hora",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409 (mesa ocupada)\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_nuevo}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mismo cliente en dos mesas a la vez",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('reserva_mesa_otra', (Number(pm.collectionVariables.get('reserva_mesa')) % 99) + 1);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409 (cruce del mismo cliente)\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa_otra}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hora fuera del horario (10:00)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"10:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hora fuera de franja (13:15)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:15\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Más de 12 personas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:00\",\n  \"personas\": 13,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cero personas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:00\",\n  \"personas\": 0,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Fecha en el pasado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2020-01-01\",\n  \"hora\": \"13:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Fecha con formato inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"01/02/2030\",\n  \"hora\": \"13:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mesero no puede reservar (solo clientes)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"13:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listado con estado inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/?estado=raro"
+          }
+        },
+        {
+          "name": "Listado con fecha inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/?fecha=ayer"
+          }
+        },
+        {
+          "name": "Mesero confirma la reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda confirmada\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"confirmada\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/{{reserva_id}}/confirmar/"
+          }
+        },
+        {
+          "name": "Mesero completa la reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda completada\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"completada\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/{{reserva_id}}/completar/"
+          }
+        },
+        {
+          "name": "Cancelar una reserva completada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/{{reserva_id}}/cancelar/"
+          }
+        },
+        {
+          "name": "Otro cliente no ve la reserva ajena",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_nuevo}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/{{reserva_id}}/"
+          }
+        },
+        {
+          "name": "Crear una reserva para cancelarla",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"se guarda su id\", () => { const j = pm.response.json(); pm.collectionVariables.set(\"reserva_cancelar_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{reserva_fecha}}\",\n  \"hora\": \"19:00\",\n  \"personas\": 4,\n  \"mesa\": \"{{reserva_mesa}}\",\n  \"notas\": \"Cumpleaños\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cliente cancela su reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"queda cancelada\", () => { const j = pm.response.json(); pm.expect(j.estado).to.eql(\"cancelada\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/{{reserva_cancelar_id}}/cancelar/"
+          }
+        },
+        {
+          "name": "Cancelar de nuevo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_cliente}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/reservas/{{reserva_cancelar_id}}/cancelar/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Caja, cierres y reportes",
+      "description": "Resumen por rol, validación de rangos y cierre de caja inmutable (se usa un día pasado sin ventas para poder repetir la ejecución).",
+      "item": [
+        {
+          "name": "Administrador: resumen completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"trae el detalle contable\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"ventas_del_dia\"); pm.expect(j).to.have.property(\"facturas\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/resumen/"
+          }
+        },
+        {
+          "name": "Mesero: resumen limitado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"solo fecha y ventas del día\", () => { const j = pm.response.json(); pm.expect(Object.keys(j).sort()).to.eql([\"fecha\", \"ventas_del_dia\"]); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/resumen/"
+          }
+        },
+        {
+          "name": "Administrador lista facturas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"incluye la factura del pedido cerrado\", () => { const j = pm.response.json(); pm.expect(j.results.map(f => f.id)).to.include(pm.collectionVariables.get(\"factura_id\")); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/facturas/"
+          }
+        },
+        {
+          "name": "Reporte de ventas (últimos 7 días)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/reportes/ventas/"
+          }
+        },
+        {
+          "name": "Reporte con rango invertido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/reportes/ventas/?desde=2026-11-04&hasta=2026-11-01"
+          }
+        },
+        {
+          "name": "Reporte con fecha futura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/reportes/ventas/?hasta=2999-01-01"
+          }
+        },
+        {
+          "name": "Reporte con rango de más de 366 días",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/reportes/ventas/?desde=2020-01-01&hasta=2026-01-01"
+          }
+        },
+        {
+          "name": "Reporte con fecha inyectada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/reportes/ventas/?desde=2026-01-01%27%3B%20DROP%20TABLE%20caja_factura%3B--"
+          }
+        },
+        {
+          "name": "Cierre con efectivo textual",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const dia = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };",
+                  "pm.collectionVariables.set('cierre_fecha', dia(-(30 + Math.floor(Math.random() * 300))));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{cierre_fecha}}\",\n  \"efectivo_contado\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cierre con efectivo negativo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{cierre_fecha}}\",\n  \"efectivo_contado\": \"-5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cierre con fecha futura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2999-01-01\",\n  \"efectivo_contado\": \"0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mesero intenta cerrar la caja",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_mesero}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{cierre_fecha}}\",\n  \"efectivo_contado\": \"0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Administrador cierra un día pasado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"cuadra en cero\", () => { const j = pm.response.json(); pm.expect(j.total_ventas).to.eql(\"0.00\"); pm.collectionVariables.set(\"cierre_id\", j.id); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{cierre_fecha}}\",\n  \"efectivo_contado\": \"0\",\n  \"observaciones\": \"Cierre de prueba\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Repetir el cierre del mismo día",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{cierre_fecha}}\",\n  \"efectivo_contado\": \"0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Consultar el cierre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/{{cierre_id}}/"
+          }
+        },
+        {
+          "name": "Un cierre no se puede modificar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/{{cierre_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"efectivo_contado\": \"999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Un cierre no se puede eliminar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Token {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/caja/cierres/{{cierre_id}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Ingreso con datos hostiles (Runner)",
+      "description": "Se ejecuta con el archivo datos/login_hostil.json en el Collection Runner: una iteración por fila, con el código esperado en la columna esperado.",
+      "item": [
+        {
+          "name": "Ingreso con {{descripcion}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const esperado = Number(pm.iterationData.get(\"esperado\"));",
+                  "pm.test(`${pm.iterationData.get(\"descripcion\")} → ${esperado}`, () => pm.response.to.have.status(esperado));",
+                  "pm.test(\"No hay error de servidor\", () => pm.expect(pm.response.code).to.be.below(500));",
+                  "pm.test(\"Nunca entrega token si esperaba rechazo\", () => { if (esperado >= 400) pm.expect(pm.response.text()).to.not.include('\"token\"'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{clave}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token_admin",
+      "value": ""
+    },
+    {
+      "key": "token_mesero",
+      "value": ""
+    },
+    {
+      "key": "token_cliente",
+      "value": ""
+    },
+    {
+      "key": "token_nuevo",
+      "value": ""
+    },
+    {
+      "key": "email_nuevo",
+      "value": ""
+    },
+    {
+      "key": "plato_id",
+      "value": ""
+    },
+    {
+      "key": "plato_precio",
+      "value": ""
+    },
+    {
+      "key": "categoria_id",
+      "value": ""
+    },
+    {
+      "key": "nombre_categoria",
+      "value": ""
+    },
+    {
+      "key": "nombre_plato",
+      "value": ""
+    },
+    {
+      "key": "plato_prueba_id",
+      "value": ""
+    },
+    {
+      "key": "pedido_id",
+      "value": ""
+    },
+    {
+      "key": "pedido_cancelar_id",
+      "value": ""
+    },
+    {
+      "key": "factura_id",
+      "value": ""
+    },
+    {
+      "key": "reserva_id",
+      "value": ""
+    },
+    {
+      "key": "reserva_cancelar_id",
+      "value": ""
+    },
+    {
+      "key": "reserva_fecha",
+      "value": ""
+    },
+    {
+      "key": "reserva_mesa",
+      "value": ""
+    },
+    {
+      "key": "reserva_mesa_otra",
+      "value": ""
+    },
+    {
+      "key": "cierre_fecha",
+      "value": ""
+    },
+    {
+      "key": "cierre_id",
+      "value": ""
+    }
+  ]
+}

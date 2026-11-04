@@ -1,0 +1,10 @@
+[
+  {"id": "clave-incorrecta", "descripcion": "Contraseña incorrecta", "correo": "{cuenta}", "clave": "clave-incorrecta-1"},
+  {"id": "correo-inexistente", "descripcion": "Correo que no existe", "correo": "nadie@prueba.test", "clave": "Prueba-Segura-2026!"},
+  {"id": "correo-vacio", "descripcion": "Correo vacío", "correo": "", "clave": "Prueba-Segura-2026!"},
+  {"id": "clave-vacia", "descripcion": "Contraseña vacía", "correo": "{cuenta}", "clave": ""},
+  {"id": "correo-sin-formato", "descripcion": "Correo sin formato de correo", "correo": "no-es-un-correo", "clave": "Prueba-Segura-2026!"},
+  {"id": "sql-en-la-clave", "descripcion": "Inyección SQL en la contraseña", "correo": "{cuenta}", "clave": "' OR '1'='1"},
+  {"id": "sql-en-el-correo", "descripcion": "Inyección SQL en el correo", "correo": "' OR 1=1 --", "clave": "x"},
+  {"id": "script-en-el-correo", "descripcion": "Etiqueta script en el correo (XSS)", "correo": "<script>alert(1)</script>@x.com", "clave": "x"}
+]
