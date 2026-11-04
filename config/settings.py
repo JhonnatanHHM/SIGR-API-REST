@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.comun",
     "apps.usuarios",
     "apps.menu",
+    "apps.pedidos",
 ]
 
 MIDDLEWARE = [
@@ -123,6 +124,8 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "RolEnum": "apps.usuarios.models.Rol",
         "RolPersonalEnum": "apps.usuarios.serializers.ROLES_PERSONAL",
+        "EstadoPedidoEnum": "apps.pedidos.models.Estado",
+        "EstadoPedidoFiltroEnum": "apps.pedidos.serializers.ESTADOS_FILTRO",
     },
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
