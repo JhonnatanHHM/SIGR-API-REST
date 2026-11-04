@@ -11,3 +11,9 @@ logs/
 *.log
 *.sql
 *.dump
+
+# Resultados de las pruebas automatizadas
+pruebas/selenium/capturas/
+pruebas/selenium/informe/
+pruebas/postman/informe/
+.pytest_cache/

@@ -6,6 +6,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Agregado
+- Colección de Postman con 118 solicitudes y 166 aserciones (autenticación, control de acceso por rol, menú, pedidos, reservas y caja), ambiente local y archivo de datos hostiles para el Collection Runner, en `pruebas/postman/`.
+- Pruebas de Selenium WebDriver (pytest, Page Object y casos en JSON) de los formularios de registro e ingreso del SIGR monolítico, con capturas de evidencia e informe HTML, en `pruebas/selenium/`.
+- Guía para ejecutar ambos conjuntos en `pruebas/README.md`.
+- Informe de la suite de Django con una marca por prueba y resumen por módulo (`config.runner.InformeRunner`).
+
+### Corregido
+- Crear una categoría, un plato o una cuenta de personal no respondía con la cabecera `Location`, contra lo documentado para todo `POST` que crea un recurso. Lo detectó la colección de Postman.
+
 ## [1.0.0] - 2026-11-04
 
 **Primera versión estable de la API REST del Sistema Integral de Gestión de Restaurante (SIGR).** A partir de aquí, cualquier cambio en los endpoints se gestiona como una solicitud de cambio y se publica con una versión nueva (compatibles: `1.x.0`; incompatibles: `2.0.0`).
