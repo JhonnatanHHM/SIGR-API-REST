@@ -6,7 +6,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.4.0] - 2026-11-04
+## [0.5.0] - 2026-11-04
+
+### Añadido
+- App `reservas` con el modelo `Reserva` (fecha, hora, personas, mesa, notas y estado).
+- Reglas de negocio centralizadas: franjas de 11:00 a 20:00 cada 30 minutos, duración de 2 horas, anticipación mínima de 1 hora y máxima de 30 días, hasta 12 personas.
+- `POST /api/v1/reservas/` (solo clientes): fecha en formato ISO `AAAA-MM-DD`, hora entre las franjas permitidas, personas y mesa numéricas dentro de su rango, notas sin `< >`. Responde 201 con la cabecera `Location`.
+- Bloqueo de cruces: una mesa no se reserva si ya hay una reserva vigente a menos de 2 horas de diferencia (el borde exacto es válido) y un cliente no puede tener dos reservas cruzadas. Un cruce responde 409; la verificación se repite dentro de la transacción, con bloqueo en PostgreSQL.
+- `GET /api/v1/reservas/` (filtros `estado`, incluido `vigentes`, `fecha` y `mesa`, con paginación) y `GET /api/v1/reservas/{id}/`: el cliente solo ve las suyas (las ajenas responden 404) y el personal ve todas.
+- Flujo Pendiente → Confirmada → Completada con `POST /api/v1/reservas/{id}/confirmar/` y `/completar/` (solo personal) y cancelación mientras esté vigente con `POST /api/v1/reservas/{id}/cancelar/`; una reserva cancelada libera la mesa.
+- Si se envía `desde` y la reserva ya cambió de estado, la API responde 409.
+- El cliente y el estado nunca se aceptan de la petición.
+- 47 pruebas nuevas (214 en total), con el reloj fijo: formatos de fecha y hora inválidos, límites de anticipación, cruces y bordes, inyección SQL en filtros, permisos y acciones con estado desactualizado.
 
 ### Añadido
 - App `pedidos` con los modelos `Pedido` e `ItemPedido`; el precio de cada ítem se congela al crear el pedido.
