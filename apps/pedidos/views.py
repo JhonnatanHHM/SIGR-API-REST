@@ -1,11 +1,13 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.caja.services import CajaCerrada, caja_cerrada, emitir_factura
 from apps.comun.excepciones import Conflicto
 from apps.usuarios.permisos import EsPersonal
 
@@ -40,7 +42,7 @@ class PedidoViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Cre
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):      # generación del esquema OpenAPI: no hay usuario
             return Pedido.objects.none()
-        consulta = Pedido.objects.select_related("cliente", "creado_por").prefetch_related("items__plato")
+        consulta = Pedido.objects.select_related("cliente", "creado_por", "factura").prefetch_related("items__plato")
         usuario = self.request.user
         if not usuario.es_personal:
             consulta = consulta.filter(cliente=usuario)
@@ -91,7 +93,14 @@ class PedidoViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Cre
             self._verificar_desde(request, pedido)
             if pedido.siguiente_estado is None:
                 raise Conflicto("El pedido ya está en su estado final.")
+            if pedido.siguiente_estado == Estado.CERRADO and caja_cerrada(timezone.localdate()):
+                raise Conflicto("La caja de hoy ya está cerrada: no se pueden cerrar más pedidos hoy.")
             pedido.avanzar()
+            if pedido.estado == Estado.CERRADO:      # al cerrar el pedido se emite su factura
+                try:
+                    emitir_factura(pedido, request.user)
+                except CajaCerrada:
+                    raise Conflicto("La caja de hoy ya está cerrada: no se pueden cerrar más pedidos hoy.")
         return Response(PedidoSerializer(self.get_queryset().get(pk=pk), context=self.get_serializer_context()).data)
 
     @extend_schema(summary="Cancelar un pedido pendiente", request=None, responses=PedidoSerializer)
