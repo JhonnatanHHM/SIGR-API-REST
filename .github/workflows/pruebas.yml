@@ -1,0 +1,61 @@
+name: Pruebas
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: pruebas-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    name: pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sigr_app
+          POSTGRES_PASSWORD: sigr_ci
+          POSTGRES_DB: sigr_api
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sigr_app -d sigr_api"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_NAME: sigr_api
+      DB_USER: sigr_app
+      DB_PASSWORD: sigr_ci
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DJANGO_SECRET_KEY: clave-solo-para-integracion-continua
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Verificar configuración de Django
+        run: python manage.py check
+
+      - name: Verificar que no faltan migraciones
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Validar el esquema OpenAPI
+        run: python manage.py spectacular --validate --file /dev/null
+
+      - name: Ejecutar pruebas (PostgreSQL)
+        run: python manage.py test --settings=config.settings_ci --verbosity=1
