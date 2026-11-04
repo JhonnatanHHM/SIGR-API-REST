@@ -164,6 +164,11 @@ class AdministracionDeUsuariosTests(TestCase):
             self.assertEqual(c.post(reverse("usuario-list"), datos_registro(rol="mesero"), format="json").status_code, 201 if esperado == 200 else 403)
             Usuario.objects.filter(email="maria@ejemplo.com").delete()
 
+    def test_crear_personal_informa_su_ubicacion(self):
+        r = cliente_api(self.admin).post(reverse("usuario-list"), datos_registro(rol="mesero"), format="json")
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual(r["Location"], f"/api/v1/usuarios/{r.json()['id']}/")
+
     def test_listado_paginado_con_orden_estable(self):
         r = cliente_api(self.admin).get(reverse("usuario-list"))
         cuerpo = r.json()

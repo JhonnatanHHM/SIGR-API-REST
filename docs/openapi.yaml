@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: SIGR API REST
-  version: 1.0.0
+  version: 1.1.0
   description: 'API REST del Sistema Integral de Gestión de Restaurante (SIGR): autenticación
     con roles, menú, pedidos, reservas, facturación, cierre de caja y reportes de
     ventas.'
