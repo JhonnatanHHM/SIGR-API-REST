@@ -6,6 +6,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.1.0] - 2026-11-04
+
 ### Agregado
 - Colección de Postman con 118 solicitudes y 166 aserciones (autenticación, control de acceso por rol, menú, pedidos, reservas y caja), ambiente local y archivo de datos hostiles para el Collection Runner, en `pruebas/postman/`.
 - Pruebas de Selenium WebDriver (pytest, Page Object y casos en JSON) de los formularios de registro e ingreso del SIGR monolítico, con capturas de evidencia e informe HTML, en `pruebas/selenium/`.
