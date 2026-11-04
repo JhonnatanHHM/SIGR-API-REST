@@ -6,7 +6,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.6.0] - 2026-11-04
+## [0.7.0] - 2026-11-04
+
+### Añadido
+- Pruebas de integración de extremo a extremo (`apps/integracion`): de la cuenta nueva a la reserva, el pedido, la factura, el cierre de caja y el reporte, más cancelaciones, alta de personal, platos agotados y cierre de sesión.
+- Matriz de acceso por rol generada a partir del esquema OpenAPI: verifica qué rol puede llamar a cada uno de los 42 endpoints (401 sin credenciales, 403 con el rol equivocado) y falla si se agrega un endpoint sin declarar su permiso.
+- Barrido de seguridad: entradas hostiles (inyección SQL, scripts, rutas, plantillas, valores gigantes, tipos incorrectos, JSON malformado, tipos de contenido no soportados) en todos los filtros y cuerpos; ninguna produce un error del servidor ni guarda datos en campos estrictos.
+- Verificaciones de integridad: sin migraciones pendientes, `check` sin problemas y esquema OpenAPI válido y sin avisos.
+- Comando `cargar_usuarios_demo`: crea un administrador, un mesero y un cliente (`@sigr.test`) con una contraseña conocida para probar la API con Postman o Swagger; solo funciona con `DJANGO_DEBUG=1`.
+- 29 pruebas nuevas (291 en total).
 
 ### Añadido
 - App `caja` con los modelos `Factura` y `CierreCaja`.
